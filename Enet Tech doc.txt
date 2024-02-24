@@ -1,0 +1,112 @@
+﻿if (enet_initialize() != 0)
+{
+    std::cerr << "Failed to initialize ENet!" << std::endl;
+    return 1;
+}
+
+
+Here, enet_initialize() initializes the ENet library. If the initialization fails (i.e., it returns a non-zero value), it prints an error message to the standard error stream (std::cerr) indicating the failure to initialize ENet and exits the program with a return value of 1.
+
+
+atexit(enet_deinitialize);
+
+
+atexit() registers a function (enet_deinitialize) to be called automatically when the program exits. This ensures proper cleanup of resources allocated by ENet when the program terminates.
+
+
+ENetHost *client;
+client = enet_host_create(NULL, 1, 2, 0, 0);
+
+
+This code segment creates an ENet client host. enet_host_create() allocates and initializes an ENet host structure. The parameters specify the maximum number of peer connections the host can have (1 in this case), the maximum number of channels (2 in this case), and other configuration options.
+
+
+if (client == NULL)
+{
+    std::cerr << "Failed to create ENet client!" << std::endl;
+    return 1;
+}
+
+
+This conditional statement checks if the ENet client host creation was successful. If client is NULL, it indicates a failure to create the client host. In such a case, it prints an error message and exits the program with a return value of 1.
+
+
+ENetAddress address;
+enet_address_set_host(&address, "localhost");
+address.port = 1234;
+
+
+This code sets the server address to connect to. It initializes an ENetAddress structure and sets the host address to "localhost" and the port number to 1234.
+
+
+ENetPeer *peer = enet_host_connect(client, &address, 2, 0);
+This line initiates a connection to the server using the ENet client host (client). It attempts to connect to the server at the specified address (&address). The 2 parameter indicates the number of channels, and 0 is a data value that can be used to pass application-specific data.
+
+
+if (peer == NULL)
+{
+    std::cerr << "No available peers for initiating an ENet connection." << std::endl;
+    return 1;
+}
+
+
+This conditional statement checks if the connection to the server failed (if peer is NULL). If there are no available peers for initiating the ENet connection, it prints an error message and exits the program with a return value of 1.
+
+
+if (enet_host_service(client, NULL, 5000) > 0 && peer->state == ENET_PEER_STATE_CONNECTED)
+{
+    std::cout << "Connection to localhost:1234 succeeded." << std::endl;
+}
+
+
+This conditional statement checks if the connection to the server was successful. It uses enet_host_service() to process incoming packets for a certain amount of time (5000 milliseconds in this case). If there are packets received (> 0) and the peer state is ENET_PEER_STATE_CONNECTED, it prints a success message indicating the successful connection.
+
+
+else
+{
+    // Reset peer and print error message if connection failed
+    enet_peer_reset(peer);
+    std::cerr << "Connection to localhost:1234 failed." << std::endl;
+    return 1;
+}
+
+
+In case the connection to the server fails, this block of code is executed. It resets the peer (enet_peer_reset(peer)) and prints an error message to the standard error stream (std::cerr) indicating the failure to connect to the server. Then, it exits the program with a return value of 1.
+
+
+enet_host_flush(client);
+
+
+This line flushes any outgoing packets in the ENet host's queue. It ensures that any pending outgoing packets are sent immediately.
+enet_peer_disconnect(peer, 0);
+
+
+This line initiates disconnection from the server. It sends a disconnect message to the server with a specific data value (0 in this case).
+
+
+while (enet_host_service(client, &event, 3000) > 0)
+{
+    // Switch case for handling different types of events
+    switch (event.type)
+    {
+    // Receive event
+    case ENET_EVENT_TYPE_RECEIVE:
+        // Destroy received packet
+        enet_packet_destroy(event.packet);
+        break;
+    // Disconnect event
+    case ENET_EVENT_TYPE_DISCONNECT:
+        std::cout << "Disconnected from server." << std::endl;
+        break;
+    }
+}
+
+
+This loop continuously services ENet to handle incoming events (such as receiving packets or disconnections) for a duration of 3000 milliseconds (3 seconds). Inside the loop, a switch-case statement is used to handle different types of events. In this code, it handles two types of events: receiving packets (ENET_EVENT_TYPE_RECEIVE) and disconnections (ENET_EVENT_TYPE_DISCONNECT). For received packets, it destroys the packet using enet_packet_destroy(event.packet). For disconnection events, it prints a message indicating disconnection from the server.
+
+
+enet_peer_reset(peer);
+enet_host_destroy(client);
+
+
+Finally, after handling all events and disconnecting from the server, the peer is reset (enet_peer_reset(peer)) and the client host is destroyed (enet_host_destroy(client)). This releases all resources associated with the ENet client host and peer.
