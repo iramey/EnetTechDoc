@@ -1,0 +1,50 @@
+﻿if (enet_initialize() != 0)
+{
+    std::cerr << "Failed to initialize ENet!" << std::endl;
+    return EXIT_FAILURE;
+}
+
+
+enet_initialize(): This function initializes the ENet library. It doesn't take any parameters. If initialization fails, it returns a non-zero value
+
+
+ENetHost* client;
+client = enet_host_create(NULL, 1, 2, 0, 0);
+
+
+* address: The address to bind the host to. NULL means any address.
+* peerCount: The maximum number of peers (connections) that can be connected simultaneously.
+* channelLimit: The maximum number of channels per peer.
+* incomingBandwidth: The incoming bandwidth of the host, in bytes per second (0 means unlimited).
+* outgoingBandwidth: The outgoing bandwidth of the host, in bytes per second (0 means unlimited).
+
+
+ENetAddress address;
+enet_address_set_host(&address, "127.0.0.1");
+address.port = 1234;
+
+
+* enet_address_set_host(): This function sets the host field of an ENetAddress object to a numerical IPv4 address or a hostname. It takes two parameters:
+   * address: A pointer to the ENetAddress object.
+   * hostName: The numerical IPv4 address or hostname to set.
+
+
+ENetPeer* server = enet_host_connect(client, &address, 2, 0);
+* enet_host_connect(): This function initiates a connection to a peer (server). It takes four parameters:
+   * client: The ENetHost object representing the client.
+   * address: A pointer to the ENetAddress object representing the server's address.
+   * channelCount: The number of channels to allocate for communication with the peer.
+   * data: User data to associate with the peer (typically set to 0).
+enet_peer_disconnect(server, 0);
+enet_host_flush(client);
+enet_peer_reset(server);
+enet_host_destroy(client);
+enet_deinitialize();
+* enet_peer_disconnect(): This function initiates the disconnection of a peer (server). It takes two parameters:
+   * peer: The ENetPeer object representing the peer to disconnect.
+   * data: Data to send with the disconnect notification (typically set to 0).
+* enet_host_flush(): This function flushes outgoing packets on the host. It takes one parameter:
+   * host: The ENetHost object to flush packets from.
+* enet_peer_reset(): This function resets a peer to the disconnected state. It takes one parameter:
+   * peer: The ENetPeer object to reset.
+* enet_host_destroy(): This function destroys an ENetHost object and releases its resources. It takes one parameter:
